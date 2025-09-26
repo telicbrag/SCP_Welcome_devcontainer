@@ -12,7 +12,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
-#include "esp_spi_flash.h"
+#include "esp_flash.h"
+#include "esp_chip_info.h"
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "memory.h"
@@ -71,7 +72,7 @@ static void initLedGpios(void)
     // so its save to set not LED GPIOs  as input 
     buffer[0] = PCAL6416_REG_CONFIG_PORT_0;
     buffer[1] = 0xff ^ ( LED_1_MASK | LED_2_MASK);
-    ESP_ERROR_CHECK( i2c_master_write_to_device(i2c_master_port, PCAL6416_IOEXPANDER_I2C_ADDR, buffer, 2, I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS));
+    ESP_ERROR_CHECK( i2c_master_write_to_device(i2c_master_port, PCAL6416_IOEXPANDER_I2C_ADDR, buffer, 2, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS));
 }
 
 
@@ -85,7 +86,7 @@ static void setLED( const uint8_t ledPort, const bool shine)
     const uint8_t curentRegister = PCAL6416_REG_OUTPUT_PORT_0;
 
     // read current output setting
-    ESP_ERROR_CHECK( i2c_master_write_read_device(i2c_master_port, PCAL6416_IOEXPANDER_I2C_ADDR, &curentRegister, sizeof(curentRegister), &currentValue, 1, I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS));
+    ESP_ERROR_CHECK( i2c_master_write_read_device(i2c_master_port, PCAL6416_IOEXPANDER_I2C_ADDR, &curentRegister, sizeof(curentRegister), &currentValue, 1, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS));
  
     // set LED GPIOs
     buffer[0] = PCAL6416_REG_OUTPUT_PORT_0;
@@ -97,7 +98,7 @@ static void setLED( const uint8_t ledPort, const bool shine)
     {
         buffer[1] = currentValue ^ ledPort;
     }
-    ESP_ERROR_CHECK( i2c_master_write_to_device(i2c_master_port, PCAL6416_IOEXPANDER_I2C_ADDR, buffer, 2, I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS));
+    ESP_ERROR_CHECK( i2c_master_write_to_device(i2c_master_port, PCAL6416_IOEXPANDER_I2C_ADDR, buffer, 2, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS));
 }
 
 
@@ -116,10 +117,13 @@ void app_main(void)
 
     printf("silicon revision %d, ", chip_info.revision);
 
-    printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
+    esp_flash_init(NULL);
+    uint32_t flashSize;
+    esp_flash_get_size(NULL, &flashSize);
+    printf("%ldMB %ld %s flash\n", flashSize / (1024 * 1024),flashSize,
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
-    printf("Minimum free heap size: %d bytes\n\n", esp_get_minimum_free_heap_size());
+    printf("Minimum free heap size: %ld bytes\n\n", esp_get_minimum_free_heap_size());
 
     printf("Init I2C\n");
     initI2C();
@@ -132,7 +136,7 @@ void app_main(void)
     memset( buffer, 0x55, sizeof(buffer));
 
     // read values
-    ESP_ERROR_CHECK( i2c_master_write_read_device(i2c_master_port, EEPROM_I2C_ADDR, &currentRegister, sizeof(currentRegister), buffer, sizeof(buffer), I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS));
+    ESP_ERROR_CHECK( i2c_master_write_read_device(i2c_master_port, EEPROM_I2C_ADDR, &currentRegister, sizeof(currentRegister), buffer, sizeof(buffer), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS));
     EEPROMInfo info;
     getEepromInfo( buffer, sizeof(buffer), &info);
     printEepromInfo( info);

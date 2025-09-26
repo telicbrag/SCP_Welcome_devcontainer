@@ -92,7 +92,7 @@ void printEepromInfo( EEPROMInfo info)
     {
         printf("\t%-25s %d\n", "Information version", info.eepromVersion);
 
-        printf("\t%-25s %05d", "Product code", info.productCodeMajor);
+        printf("\t%-25s %05ld", "Product code", info.productCodeMajor);
         if ( info.productCodeMinor != 0xffff )
             printf(".%03d", info.productCodeMinor);
         printf("\n");
@@ -102,7 +102,7 @@ void printEepromInfo( EEPROMInfo info)
         printf("\t%-25s %s\n", "Production timestamp", stringbuffer);
 
 
-        printf("\t%-25s %05d", "Assembly code", info.assemblyCodeMajor);
+        printf("\t%-25s %05ld", "Assembly code", info.assemblyCodeMajor);
         if ( info.assemblyCodeMinor != 0xffff )
             printf(".%03d", info.assemblyCodeMinor);
         printf("\n");
