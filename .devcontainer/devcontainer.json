@@ -17,10 +17,4 @@
 		"ms-vscode.cpptools"
 	],
 	"userEnvProbe": "loginInteractiveShell",
-  "customizations" : {
-    "jetbrains" : {
-      "backend" : "IntelliJ"
-    }
-  }
-
 }
